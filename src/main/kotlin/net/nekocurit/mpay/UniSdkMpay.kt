@@ -12,6 +12,7 @@ import kotlinx.coroutines.runBlocking
 import net.nekocurit.mpay.data.RespondMpayDeviceRegister
 import net.nekocurit.mpay.data.RespondMpayLogin
 import net.nekocurit.mpay.data.RespondMpayLoginError
+import net.nekocurit.mpay.data.RespondMpayTicket
 import net.nekocurit.mpay.entity.MpayDevice
 import net.nekocurit.mpay.utils.MpayLoginEncrypt
 import net.nekocurit.utils.json
@@ -23,6 +24,11 @@ import kotlin.io.encoding.Base64
 import kotlin.random.Random
 
 class UniSdkMpay(val project: String = "aecfrxodyqaaaajp-g-x19", val version: String = runBlocking { WPLUpdaterAPI.get().version }) {
+
+    companion object {
+        @Suppress("SpellCheckingInspection")
+        const val SCOPE = "nickname,avatar,realname_status,mobile_bind_status,mask_related_mobile,related_login_status"
+    }
 
     val client = HttpClient {
         install(ContentNegotiation) {
@@ -69,8 +75,7 @@ class UniSdkMpay(val project: String = "aecfrxodyqaaaajp-g-x19", val version: St
         .submitForm(
             url = "/mpay/games/$project/devices/${device.id}/users",
             formParameters = buildMpayParameters {
-                @Suppress("SpellCheckingInspection")
-                append("opt_fields", "nickname,avatar,realname_status,mobile_bind_status,mask_related_mobile,related_login_status")
+                append("opt_fields", SCOPE)
                 append("params", MpayLoginEncrypt.encryptLoginParams(email, password, device))
                 append("un", Base64.encode(email.toByteArray()))
             }
@@ -78,6 +83,59 @@ class UniSdkMpay(val project: String = "aecfrxodyqaaaajp-g-x19", val version: St
         .checkError()
         .body<RespondMpayLogin>()
         .user
+
+    /**
+     * 请求短信发送验证码
+     *
+     * @param device 设备标识
+     * @param phone 手机号
+     */
+    suspend fun requestSms(device: MpayDevice, phone: String) = client
+        .submitForm(
+            url = "/mpay/api/users/login/mobile/get_sms",
+            formParameters = buildMpayParameters {
+                append("device_id", device.id)
+                append("mobile", phone)
+            }
+        )
+        .also { println(it.bodyAsText()) }
+        .checkError()
+        .let { }
+
+    /**
+     * 验证验证码并登陆
+     *
+     * @param device 设备标识
+     * @param phone 手机号
+     * @param code 收到的验证码
+     */
+    suspend fun verifySms(device: MpayDevice, phone: String, code: String) = client
+        .submitForm(
+            url = "/mpay/api/users/login/mobile/verify_sms",
+            formParameters = buildMpayParameters {
+                append("device_id", device.id)
+                append("mobile", phone)
+                @Suppress("SpellCheckingInspection")
+                append("smscode", code)
+                append("up_content", "");
+            }
+        )
+        .checkError()
+        .body<RespondMpayTicket>()
+        .let { ticket ->
+            client
+                .submitForm(
+                    url = "/mpay/api/users/login/mobile/finish?un=${Base64.encode(phone.toByteArray())}",
+                    formParameters = buildMpayParameters {
+                        append("device_id", device.id)
+                        append("opt_fields", SCOPE)
+                        append("ticket", ticket.ticket)
+                    }
+                )
+                .checkError()
+                .body<RespondMpayLogin>()
+                .user
+        }
 
     @Suppress("SpellCheckingInspection")
     private fun buildMpayParameters(block: ParametersBuilder.() -> Unit) = Parameters.build {

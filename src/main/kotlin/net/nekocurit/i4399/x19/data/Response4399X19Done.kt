@@ -3,7 +3,6 @@ package net.nekocurit.i4399.x19.data
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.decodeFromJsonElement
 import net.nekocurit.utils.json
 

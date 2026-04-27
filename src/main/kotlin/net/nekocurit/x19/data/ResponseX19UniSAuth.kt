@@ -13,7 +13,7 @@ data class ResponseX19UniSAuth(
     val subCode: Int,
     val aid: ULong = 0UL,
     @SerialName("sdkuid")
-    val sdkUid: ULong = 0UL,
+    val sdkUid: String = "",
     @SerialName("first_login_platform")
     val platformFirstLogin: String = ""
 ) {
