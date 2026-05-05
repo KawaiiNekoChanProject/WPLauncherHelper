@@ -28,9 +28,9 @@ data class X19Skin(
     @SerialName("client_type")
     val clientType: X19ClientType
 ): X19Entity() {
-    enum class SkinMode {
-        DEFAULT,
-        SLIM;
+    enum class SkinMode(val displayName: String) {
+        DEFAULT("粗壮"),
+        SLIM("纤细");
         object Serializer: KSerializer<SkinMode> {
             override val descriptor = PrimitiveSerialDescriptor("SkinMode", PrimitiveKind.INT)
             override fun serialize(encoder: Encoder, value: SkinMode) = encoder.encodeInt(value.ordinal)

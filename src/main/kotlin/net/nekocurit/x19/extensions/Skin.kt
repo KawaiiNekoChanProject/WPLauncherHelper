@@ -2,6 +2,7 @@ package net.nekocurit.x19.extensions
 
 import net.nekocurit.cipher.Skip32Cipher
 import net.nekocurit.x19.WPLauncherAccountAPI
+import net.nekocurit.x19.api.getItemDetails
 import net.nekocurit.x19.api.getItemDownload
 import net.nekocurit.x19.api.getSkin
 import net.nekocurit.x19.data.X19Entity
@@ -34,20 +35,21 @@ data class X19SimplePlayerSkin(
     companion object {
         suspend fun List<X19Skin>.toSimple(api: WPLauncherAccountAPI) = X19SimplePlayerSkin(
             firstOrNull { it.clientType == X19ClientType.Java }
-                ?.let { Detail(it.skinId, it.skinMode, api.getItemDownload(it.skinId).components.first().resourceUrl) }
+                ?.let { Detail(it.skinId, api.getItemDetails(it.skinId).name, it.skinMode, api.getItemDownload(it.skinId).components.first().resourceUrl) }
                 ?: Detail.DEFAULT,
             firstOrNull { it.clientType == X19ClientType.Bedrock }
-                ?.let { Detail(it.skinId, it.skinMode, api.getItemDownload(it.skinId).components.first().resourceUrl) }
+                ?.let { Detail(it.skinId, api.getItemDetails(it.skinId).name, it.skinMode, api.getItemDownload(it.skinId).components.first().resourceUrl) }
                 ?: Detail.DEFAULT
         )
     }
     data class Detail(
         val id: ULong,
+        val name: String,
         val mode: X19Skin.SkinMode,
         val url: String
     ) {
         companion object {
-            val DEFAULT = Detail(X19DefaultSkins.STEVE, X19Skin.SkinMode.DEFAULT, X19DefaultSkins.STEVE_DOWNLOAD_URL)
+            val DEFAULT = Detail(X19DefaultSkins.STEVE, "默认皮肤", X19Skin.SkinMode.DEFAULT, X19DefaultSkins.STEVE_DOWNLOAD_URL)
         }
     }
 }
