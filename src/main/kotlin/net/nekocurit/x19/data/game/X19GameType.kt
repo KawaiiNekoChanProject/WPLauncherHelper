@@ -8,6 +8,10 @@ import kotlinx.serialization.encoding.Encoder
 
 enum class X19GameType(val id: UInt) {
     /**
+     * 老版本全局皮肤(?)
+     */
+    All(1U),
+    /**
      * 网络游戏
      */
     Network(2U),

@@ -9,7 +9,12 @@ enum class X19ClientType {
     @SerialName("java")
     Java,
     @SerialName("cpp")
-    Bedrock;
+    Bedrock,
+    /**
+     * 旧全局
+     */
+    @SerialName("all")
+    All;
 
     val id by lazy { json.encodeToString(this).replace("\"", "") }
 }
