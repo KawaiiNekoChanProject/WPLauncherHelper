@@ -1,4 +1,4 @@
-package net.nekocurit.x19.data.game
+package net.nekocurit.x19.data.item
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -10,7 +10,7 @@ import kotlin.time.Instant
  * @param currentOnline 只有组件类型为 网络服务器 时才适用
  */
 @Serializable
-data class X19NetworkServer(
+data class X19ItemDetails(
     val name: String,
     @SerialName("brief_image_urls")
     val wallpaperUrls: List<String>,
