@@ -6,17 +6,6 @@ import net.nekocurit.x19.WPLauncherAccountAPI
  * 设置是否喜欢指定组件
  *
  * @param itemId 物品Id
- */
-suspend fun WPLauncherAccountAPI.buyItemIfNotHave(itemId: ULong) {
-    if (isPurchase(itemId)) return
-
-    buyItem(createPurchaseOrder(itemId))
-}
-
-/**
- * 设置是否喜欢指定组件
- *
- * @param itemId 物品Id
  * @param like 喜欢/不喜欢  null = 清空设置
  */
 suspend fun WPLauncherAccountAPI.sendItemLike(itemId: ULong, like: Boolean?) {
