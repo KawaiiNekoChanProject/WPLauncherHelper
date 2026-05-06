@@ -14,8 +14,6 @@ import net.nekocurit.x19.data.ResponseX19Base
 import net.nekocurit.x19.data.ResponseX19BaseMulti
 import net.nekocurit.x19.data.entity.X19AuthenticationEntity
 import net.nekocurit.x19.data.entity.X19AuthenticationEntity.Companion.asX19AuthenticationEntity
-import net.nekocurit.x19.data.game.X19Like
-import net.nekocurit.x19.data.game.X19Like.Companion.asX19Like
 import net.nekocurit.x19.data.game.X19NetworkServerJoinInfo.Companion.asX19NetworkServerJoinInfo
 import net.nekocurit.x19.data.game.X19RentalServer.Companion.asX19RentalServer
 import net.nekocurit.x19.data.game.X19RentalServerJoinInfo.Companion.asX19RentalServerJoinInfo
@@ -114,29 +112,6 @@ class WPLauncherAccountAPI(var entity: X19AuthenticationEntity) {
         .body<ResponseX19Base>()
         .throwOnNotOk()
         .asX19NetworkServerJoinInfo()
-
-    /**
-     * 申请组件是否喜欢实例
-     * 即启动器点开服务器详情页面中 推荐 / 不推荐
-     * 需要稍后使用 `updateNetworkServerLike` 更新评论
-     *
-     * @param itemId 物品Id
-     */
-    suspend fun requestItemLike(itemId: ULong) = postWithAuth("/user-item-like", """{"entity_id":"0","item_id":"$itemId","user_id":"${entity.entityId}","has_like":-1}""")
-        .body<ResponseX19Base>()
-        .throwOnNotOk()
-        .asX19Like()
-
-    /**
-     * 更新对组件是否喜欢
-     *
-     * @param like 实例
-     * @param flag 是否喜欢  null = 清空状态
-     */
-    suspend fun updateItemLike(like: X19Like, flag: Boolean?) = postWithAuth("/user-item-like/update", """{"entity_id":"${like.id}","item_id":"${like.itemId}","user_id":"${entity.entityId}","has_like":${flag?.let { flag -> if (flag) 1 else -1 } ?: 0}}""")
-        .body<ResponseX19Base>()
-        .throwOnNotOk()
-        .asX19Like()
 
     /**
      * 登出账号

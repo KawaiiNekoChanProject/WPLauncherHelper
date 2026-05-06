@@ -1,6 +1,8 @@
 package net.nekocurit.x19.extensions
 
 import net.nekocurit.x19.WPLauncherAccountAPI
+import net.nekocurit.x19.api.requestItemLike
+import net.nekocurit.x19.api.updateItemLike
 
 /**
  * 设置是否喜欢指定组件
