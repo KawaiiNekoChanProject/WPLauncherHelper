@@ -1,1 +1,1 @@
-rootProject.name = "WPLauncherHelper"
+rootProject.name = "wplauncher-helper"
