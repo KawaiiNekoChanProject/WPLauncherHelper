@@ -1,6 +1,7 @@
 package net.nekocurit.x19.api
 
 import io.ktor.client.call.body
+import net.nekocurit.utils.toJsonString
 import net.nekocurit.x19.WPLauncherAccountAPI
 import net.nekocurit.x19.data.ResponseX19Base
 import net.nekocurit.x19.data.user.X19SelfDetail
@@ -19,7 +20,7 @@ suspend fun WPLauncherAccountAPI.getSelfDetail() = postWithAuth("/user-detail", 
  *
  * @param name 全局昵称
  */
-suspend fun WPLauncherAccountAPI.initNick(name: String) = postWithAuth("/nickname-setting", """{"name":"$name","entity_id":"${entity.entityId}"}""")
+suspend fun WPLauncherAccountAPI.initNick(name: String) = postWithAuth("/nickname-setting", """{"name":${name.toJsonString()},"entity_id":"${entity.entityId}"}""")
     .body<ResponseX19Base>()
     .throwOnNotOk()
     .also { cacheName = name }
@@ -31,7 +32,7 @@ suspend fun WPLauncherAccountAPI.initNick(name: String) = postWithAuth("/nicknam
  */
 suspend fun WPLauncherAccountAPI.updateNick(name: String) = postWithAuth(
     path = "/pc-nickname-setting/update",
-    body = """{"name":"$name"}"""
+    body = """{"name":${name.toJsonString()}}"""
 )
     .body<ResponseX19Base>()
     .throwOnNotOk()

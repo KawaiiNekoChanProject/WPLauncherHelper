@@ -1,6 +1,7 @@
 package net.nekocurit.x19.api
 
 import io.ktor.client.call.body
+import net.nekocurit.utils.toJsonString
 import net.nekocurit.x19.WPLauncherAccountAPI
 import net.nekocurit.x19.data.ResponseX19Base
 import net.nekocurit.x19.data.ResponseX19BaseMulti
@@ -22,7 +23,7 @@ suspend fun WPLauncherAccountAPI.getNetworkServerCharacters(serverId: ULong) = p
  * @param serverId 服务器Id
  * @param name 名称
  */
-suspend fun WPLauncherAccountAPI.createNetworkServerCharacter(serverId: ULong, name: String) = postWithAuth("/game-character", """{"entity_id":"0","game_id":"$serverId","game_type":2,"user_id":"${entity.entityId}","name":"$name","create_time":555555}""")
+suspend fun WPLauncherAccountAPI.createNetworkServerCharacter(serverId: ULong, name: String) = postWithAuth("/game-character", """{"entity_id":"0","game_id":"$serverId","game_type":2,"user_id":"${entity.entityId}","name":${name.toJsonString()},"create_time":555555}""")
     .body<ResponseX19Base>()
     .throwOnNotOk()
     .decode<X19GameCharacter>(this)

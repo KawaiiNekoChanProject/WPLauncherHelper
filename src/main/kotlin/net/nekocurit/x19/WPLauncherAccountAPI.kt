@@ -10,6 +10,7 @@ import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import net.nekocurit.utils.json
+import net.nekocurit.utils.toJsonString
 import net.nekocurit.x19.data.ResponseX19Base
 import net.nekocurit.x19.data.ResponseX19BaseMulti
 import net.nekocurit.x19.data.entity.X19AuthenticationEntity
@@ -25,6 +26,11 @@ class WPLauncherAccountAPI(var entity: X19AuthenticationEntity) {
     constructor(id: ULong, token: String): this(X19AuthenticationEntity(entityId = id, token = token))
 
     val client = HttpClient(Java) {
+        install(HttpTimeout) {
+            requestTimeoutMillis = 15_000
+            connectTimeoutMillis = 5_000
+            socketTimeoutMillis = 15_000
+        }
         install(ContentNegotiation) {
             json(json, contentType = ContentType.Any)
         }
@@ -77,7 +83,7 @@ class WPLauncherAccountAPI(var entity: X19AuthenticationEntity) {
      *
      * @param key 关键词 可直接填写服务器号
      */
-    suspend fun searchRentalServers(key: String) = postWithAuth("/rental-server/query/available-public-server", """{"offset":0,"sort_type":0,"world_name_key":"$key"}""")
+    suspend fun searchRentalServers(key: String) = postWithAuth("/rental-server/query/available-public-server", """{"offset":0,"sort_type":0,"world_name_key":${key.toJsonString()}}""")
         .body<ResponseX19BaseMulti>()
         .throwOnNotOk()
         .asX19RentalServer()
@@ -98,7 +104,7 @@ class WPLauncherAccountAPI(var entity: X19AuthenticationEntity) {
      * @param serverId 服务器号
      * @param password 密码
      */
-    suspend fun getRentalServerJoinInfo(serverId: ULong, password: String = "") = postWithAuth("/rental-server-world-enter/get", """{"server_id":"$serverId","pwd":"$password"}""")
+    suspend fun getRentalServerJoinInfo(serverId: ULong, password: String = "") = postWithAuth("/rental-server-world-enter/get", """{"server_id":"$serverId","pwd":${password.toJsonString()}}""")
         .body<ResponseX19Base>()
         .throwOnNotOk()
         .asX19RentalServerJoinInfo()

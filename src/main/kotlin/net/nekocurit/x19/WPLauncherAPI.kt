@@ -25,6 +25,11 @@ import kotlin.random.Random
 object WPLauncherAPI {
 
     val client = HttpClient(Java) {
+        install(HttpTimeout) {
+            requestTimeoutMillis = 15_000
+            connectTimeoutMillis = 15_000
+            socketTimeoutMillis = 15_000
+        }
         install(ContentNegotiation) {
             json(json, contentType = ContentType.Any)
         }
