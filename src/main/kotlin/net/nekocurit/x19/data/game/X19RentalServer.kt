@@ -1,11 +1,13 @@
 package net.nekocurit.x19.data.game
 
+import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.decodeFromJsonElement
-import net.nekocurit.utils.json
-import net.nekocurit.x19.data.ResponseX19Base
-import net.nekocurit.x19.data.ResponseX19BaseMulti
+import kotlinx.serialization.descriptors.PrimitiveKind
+import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
+import net.nekocurit.x19.data.X19Entity
 
 /**
  * @param id 这里不是启动器显示的服务器号, 而是内部 id
@@ -31,14 +33,14 @@ data class X19RentalServer(
     @SerialName("server_type")
     val type: String,
     @SerialName("has_pwd")
-    private val rawHasPassword: Int
-) {
+    @Serializable(with = HasPasswordSerializer::class)
+    val hasPassword: Boolean
+): X19Entity() {
 
-    val hasPassword
-        get() = rawHasPassword == 1
+    object HasPasswordSerializer: KSerializer<Boolean> {
+        override val descriptor = PrimitiveSerialDescriptor("HasPassword", PrimitiveKind.BOOLEAN)
 
-    companion object {
-        fun ResponseX19Base.asX19RentalServer() = json.decodeFromJsonElement<X19RentalServer>(this.entity)
-        fun ResponseX19BaseMulti.asX19RentalServer() = json.decodeFromJsonElement<List<X19RentalServer>>(this.entities)
+        override fun serialize(encoder: Encoder, value: Boolean) = encoder.encodeInt(if (value) 1 else 0)
+        override fun deserialize(decoder: Decoder) = decoder.decodeInt() == 1
     }
 }

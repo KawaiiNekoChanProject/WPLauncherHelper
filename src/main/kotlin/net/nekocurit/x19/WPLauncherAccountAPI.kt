@@ -11,13 +11,10 @@ import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import net.nekocurit.utils.json
 import net.nekocurit.x19.data.ResponseX19Base
-import net.nekocurit.x19.data.ResponseX19BaseMulti
 import net.nekocurit.x19.data.WPLauncherSession
 import net.nekocurit.x19.data.entity.X19AuthenticationEntity
 import net.nekocurit.x19.data.entity.X19AuthenticationEntity.Companion.asX19AuthenticationEntity
 import net.nekocurit.x19.data.game.X19NetworkServerJoinInfo.Companion.asX19NetworkServerJoinInfo
-import net.nekocurit.x19.data.game.X19RentalServer.Companion.asX19RentalServer
-import net.nekocurit.x19.data.game.X19RentalServerJoinInfo.Companion.asX19RentalServerJoinInfo
 
 class WPLauncherAccountAPI(var session: WPLauncherSession) {
 
@@ -71,37 +68,6 @@ class WPLauncherAccountAPI(var session: WPLauncherSession) {
     suspend fun doLoginStart() = postWithAuth("/interconn/web/game-play-v2/login-start", """{"strict_mode":true}""")
         .body<ResponseX19Base>()
         .throwOnNotOk()
-
-    /**
-     * 搜索租赁服
-     *
-     * @param key 关键词 可直接填写服务器号
-     */
-    suspend fun searchRentalServers(key: String) = postWithAuth("/rental-server/query/available-public-server", """{"offset":0,"sort_type":0,"world_name_key":"$key"}""")
-        .body<ResponseX19BaseMulti>()
-        .throwOnNotOk()
-        .asX19RentalServer()
-
-    /**
-     * 获取租赁服信息
-     *
-     * @param serverId 服务器号
-     */
-    suspend fun getRentalServerInfo(serverId: ULong) = postWithAuth("/rental-server-details/get", """{"server_id":"$serverId"}""")
-        .body<ResponseX19Base>()
-        .throwOnNotOk()
-        .asX19RentalServer()
-
-    /**
-     * 获取租赁服直连信息
-     *
-     * @param serverId 服务器号
-     * @param password 密码
-     */
-    suspend fun getRentalServerJoinInfo(serverId: ULong, password: String = "") = postWithAuth("/rental-server-world-enter/get", """{"server_id":"$serverId","pwd":"$password"}""")
-        .body<ResponseX19Base>()
-        .throwOnNotOk()
-        .asX19RentalServerJoinInfo()
 
     /**
      * 获取网络服务器连接信息
