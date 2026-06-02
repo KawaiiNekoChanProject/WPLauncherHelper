@@ -61,7 +61,7 @@ suspend fun WPLauncherAccountAPI.likeComment(userId: ULong, commentId: ULong) = 
  */
 suspend fun WPLauncherAccountAPI.sendItemComment(itemId: ULong, content: String, replyId: ULong = 0UL) = postWithAuth(
     path = "/user-item-comment",
-    body = """{"entity_id":"0","user_id":"${entity.entityId}","item_id":"$itemId","content":"$content","master_id":"$replyId","reply_id":"$replyId","total_like":0,"create_time":${Clock.System.now().toEpochMilliseconds()},"comment_type":0}"""
+    body = """{"entity_id":"0","user_id":"${session.id}","item_id":"$itemId","content":"$content","master_id":"$replyId","reply_id":"$replyId","total_like":0,"create_time":${Clock.System.now().toEpochMilliseconds()},"comment_type":0}"""
 )
     .body<ResponseX19Base>()
     .throwOnNotOk()

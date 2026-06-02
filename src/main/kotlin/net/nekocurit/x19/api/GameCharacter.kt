@@ -11,7 +11,7 @@ import net.nekocurit.x19.data.game.X19GameCharacter
  *
  * @param serverId 服务器Id
  */
-suspend fun WPLauncherAccountAPI.getNetworkServerCharacters(serverId: ULong) = postWithAuth("/game-character/query/user-game-characters", """{"offset":0,"length":10,"user_id":"${entity.entityId}","game_id":"$serverId","game_type":2}""")
+suspend fun WPLauncherAccountAPI.getNetworkServerCharacters(serverId: ULong) = postWithAuth("/game-character/query/user-game-characters", """{"offset":0,"length":10,"user_id":"${session.id}","game_id":"$serverId","game_type":2}""")
     .body<ResponseX19BaseMulti>()
     .throwOnNotOk()
     .decode<X19GameCharacter>(this)
@@ -22,7 +22,7 @@ suspend fun WPLauncherAccountAPI.getNetworkServerCharacters(serverId: ULong) = p
  * @param serverId 服务器Id
  * @param name 名称
  */
-suspend fun WPLauncherAccountAPI.createNetworkServerCharacter(serverId: ULong, name: String) = postWithAuth("/game-character", """{"entity_id":"0","game_id":"$serverId","game_type":2,"user_id":"${entity.entityId}","name":"$name","create_time":555555}""")
+suspend fun WPLauncherAccountAPI.createNetworkServerCharacter(serverId: ULong, name: String) = postWithAuth("/game-character", """{"entity_id":"0","game_id":"$serverId","game_type":2,"user_id":"${session.id}","name":"$name","create_time":555555}""")
     .body<ResponseX19Base>()
     .throwOnNotOk()
     .decode<X19GameCharacter>(this)

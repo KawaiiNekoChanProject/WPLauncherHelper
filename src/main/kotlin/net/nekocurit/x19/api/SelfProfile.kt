@@ -11,7 +11,7 @@ import net.nekocurit.x19.data.user.X19SelfDetail
 suspend fun WPLauncherAccountAPI.getSelfDetail() = postWithAuth("/user-detail", "")
     .body<ResponseX19Base>()
     .throwOnNotOk()
-    .decode<X19SelfDetail>(this) { cacheName = name }
+    .decode<X19SelfDetail>(this) { session.name = name }
 
 /**
  * 初始化自身昵称
@@ -19,10 +19,10 @@ suspend fun WPLauncherAccountAPI.getSelfDetail() = postWithAuth("/user-detail", 
  *
  * @param name 全局昵称
  */
-suspend fun WPLauncherAccountAPI.initNick(name: String) = postWithAuth("/nickname-setting", """{"name":"$name","entity_id":"${entity.entityId}"}""")
+suspend fun WPLauncherAccountAPI.initNick(name: String) = postWithAuth("/nickname-setting", """{"name":"$name","entity_id":"${session.id}"}""")
     .body<ResponseX19Base>()
     .throwOnNotOk()
-    .also { cacheName = name }
+    .also { session.name = name }
 
 /**
  * 更新自身昵称
@@ -35,4 +35,4 @@ suspend fun WPLauncherAccountAPI.updateNick(name: String) = postWithAuth(
 )
     .body<ResponseX19Base>()
     .throwOnNotOk()
-    .also { cacheName = name }
+    .also { session.name = name }

@@ -12,7 +12,7 @@ import net.nekocurit.x19.data.skin.X19Skin.SkinMode
  *
  * @param userId 指定用户Id 省略默认为自身
  */
-suspend fun WPLauncherAccountAPI.getSkin(userId: ULong = entity.entityId) = postWithAuth(
+suspend fun WPLauncherAccountAPI.getSkin(userId: ULong = session.id) = postWithAuth(
     path = "/user-game-skin/query/search-by-type",
     body = """{"user_id":"$userId","game_type":null,"client_type":"all","entity_id":null}"""
 )
