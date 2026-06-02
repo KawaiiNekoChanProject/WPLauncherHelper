@@ -15,7 +15,7 @@ import net.nekocurit.x19.data.game.X19ItemLike
  */
 suspend fun WPLauncherAccountAPI.requestItemLike(itemId: ULong) = postWithAuth(
     path = "/user-item-like",
-    body = """{"entity_id":"0","item_id":"$itemId","user_id":"${entity.entityId}","has_like":-1}"""
+    body = """{"entity_id":"0","item_id":"$itemId","user_id":"${session.id}","has_like":-1}"""
 )
     .body<ResponseX19Base>()
     .throwOnNotOk()
@@ -29,7 +29,7 @@ suspend fun WPLauncherAccountAPI.requestItemLike(itemId: ULong) = postWithAuth(
  */
 suspend fun WPLauncherAccountAPI.updateItemLike(like: X19ItemLike, flag: Boolean?) = postWithAuth(
     path = "/user-item-like/update",
-    body = """{"entity_id":"${like.id}","item_id":"${like.itemId}","user_id":"${entity.entityId}","has_like":${flag.toHasLikeId()}}"""
+    body = """{"entity_id":"${like.id}","item_id":"${like.itemId}","user_id":"${session.id}","has_like":${flag.toHasLikeId()}}"""
 )
     .body<ResponseX19Base>()
     .throwOnNotOk()

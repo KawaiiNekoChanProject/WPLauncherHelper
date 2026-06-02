@@ -42,7 +42,7 @@ suspend fun WPLauncherAccountAPI.searchFriends(input: String, isMail: Boolean = 
  * @param message 消息
  * @param selfNick 自身名称 通过`getSelfDetail`获取
  */
-suspend fun WPLauncherAccountAPI.sendFriendRequest(id: ULong, message: String = "", selfNick: String = cacheName) = postWithAuth(
+suspend fun WPLauncherAccountAPI.sendFriendRequest(id: ULong, message: String = "", selfNick: String = session.name) = postWithAuth(
     path = "/user-apply-friend",
     body = """{"fid":$id,"comment":"$selfNick","message":"$message"}"""
 )
@@ -71,7 +71,7 @@ suspend fun WPLauncherAccountAPI.getUserPublicState(id: ULong) = postWithAuth(
  */
 suspend fun WPLauncherAccountAPI.likeUser(id: ULong, state: Boolean = true) = postWithAuth(
     path = "/user-personal-page-like/update",
-    body = """{"entity_id":"${entity.entityId}","visitor_user_id":"${entity.entityId}","personal_page_owner_user_id":"$id","has_like":$state}"""
+    body = """{"entity_id":"${session.id}","visitor_user_id":"${session.id}","personal_page_owner_user_id":"$id","has_like":$state}"""
 )
     .body<ResponseX19Base>()
     .throwOnNotOk()

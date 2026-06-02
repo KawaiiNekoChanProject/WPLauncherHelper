@@ -26,7 +26,7 @@ suspend fun WPLauncherAccountAPI.isPurchase(itemId: ULong) = postWithAuth(
  */
 suspend fun WPLauncherAccountAPI.createPurchaseOrder(itemId: ULong) = postWithAuth(
     path = "/user-item-purchase",
-    body = """{"entity_id":0,"item_id":"$itemId","item_level":0,"user_id":"${entity.entityId}","purchase_time":0,"last_play_time":0,"total_play_time":0,"receiver_id":"","buy_path":"PC_H5_LAUNCH_GAME","coupon_ids":null,"diamond":0,"activity_name":"","batch_count":1}"""
+    body = """{"entity_id":0,"item_id":"$itemId","item_level":0,"user_id":"${session.id}","purchase_time":0,"last_play_time":0,"total_play_time":0,"receiver_id":"","buy_path":"PC_H5_LAUNCH_GAME","coupon_ids":null,"diamond":0,"activity_name":"","batch_count":1}"""
 )
     .body<ResponseX19Base>()
     .throwOnNotOk()

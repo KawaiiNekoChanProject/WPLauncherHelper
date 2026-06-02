@@ -13,7 +13,7 @@ import net.nekocurit.x19.data.cloud_save.X19CloudSaveUpload
 
 suspend fun WPLauncherAccountAPI.getCloudSaveList() = postWithAuth(
     path = "/cloud-save-v2/query/my-save-list",
-    body = """{"item_id":"${entity.entityId}","offset":0,"length":50}"""
+    body = """{"item_id":"${session.id}","offset":0,"length":50}"""
 )
     .body<ResponseX19BaseMulti>()
     .throwOnNotOk()
