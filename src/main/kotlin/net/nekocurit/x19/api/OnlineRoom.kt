@@ -1,6 +1,7 @@
 package net.nekocurit.x19.api
 
 import io.ktor.client.call.*
+import net.nekocurit.utils.toJsonString
 import net.nekocurit.x19.WPLauncherAccountAPI
 import net.nekocurit.x19.data.ResponseX19Base
 import net.nekocurit.x19.data.ResponseX19BaseMulti
@@ -18,7 +19,7 @@ import net.nekocurit.x19.data.online_room.X19OnlineRoomMember
 @Suppress("SpellCheckingInspection")
 suspend fun WPLauncherAccountAPI.onlineRoomJoin(id: ULong, password: String = "") = postWithAuth(
     path = "/online-lobby-room-enter",
-    body = """{"room_id":"$id","password":"$password","check_visibilily":true}"""
+    body = """{"room_id":"$id","password":${password.toJsonString()},"check_visibilily":true}"""
 )
     .body<ResponseX19Base>()
     .throwOnNotOk()
@@ -65,7 +66,7 @@ suspend fun WPLauncherAccountAPI.onlineRoomCurrentJoinInfo() = postWithAuth(
  */
 suspend fun WPLauncherAccountAPI.onlineRoomSearch(name: String) = postWithAuth(
     path = "/online-lobby-room/query/search-by-name",
-    body = """{"room_name":"$name","res_id":"","version":"1.21.50","offset":0,"length":50}"""
+    body = """{"room_name":${name.toJsonString()},"res_id":"","version":"1.21.50","offset":0,"length":50}"""
 )
     .body<ResponseX19BaseMulti>()
     .throwOnNotOk()

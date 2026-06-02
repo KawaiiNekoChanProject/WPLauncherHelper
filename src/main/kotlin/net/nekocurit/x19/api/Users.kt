@@ -1,6 +1,7 @@
 package net.nekocurit.x19.api
 
 import io.ktor.client.call.*
+import net.nekocurit.utils.toJsonString
 import net.nekocurit.x19.WPLauncherAccountAPI
 import net.nekocurit.x19.data.ResponseX19Base
 import net.nekocurit.x19.data.ResponseX19BaseMulti
@@ -30,7 +31,7 @@ suspend fun WPLauncherAccountAPI.getUser(ids: Collection<ULong>) = postWithAuth(
  * @param input 名称或者邮箱
  * @param isMail 是否为邮箱搜索
  */
-suspend fun WPLauncherAccountAPI.searchFriends(input: String, isMail: Boolean = input.contains("@")) = postWithAuth("/user-search-friend", """{"name_or_mail":"$input","mail_flag":$isMail}""")
+suspend fun WPLauncherAccountAPI.searchFriends(input: String, isMail: Boolean = input.contains("@")) = postWithAuth("/user-search-friend", """{"name_or_mail":${input.toJsonString()},"mail_flag":$isMail}""")
     .body<ResponseX19BaseMulti>()
     .throwOnNotOk()
     .decode<X19UserDetails>(this)
@@ -44,7 +45,7 @@ suspend fun WPLauncherAccountAPI.searchFriends(input: String, isMail: Boolean = 
  */
 suspend fun WPLauncherAccountAPI.sendFriendRequest(id: ULong, message: String = "", selfNick: String = cacheName) = postWithAuth(
     path = "/user-apply-friend",
-    body = """{"fid":$id,"comment":"$selfNick","message":"$message"}"""
+    body = """{"fid":$id,"comment":${selfNick.toJsonString()},"message":${message.toJsonString()}}"""
 )
     .body<ResponseX19Base>()
     .throwOnNotOk()
