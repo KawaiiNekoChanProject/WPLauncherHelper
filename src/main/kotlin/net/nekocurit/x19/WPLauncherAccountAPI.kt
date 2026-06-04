@@ -14,7 +14,6 @@ import net.nekocurit.x19.data.ResponseX19Base
 import net.nekocurit.x19.data.WPLauncherSession
 import net.nekocurit.x19.data.entity.X19AuthenticationEntity
 import net.nekocurit.x19.data.entity.X19AuthenticationEntity.Companion.asX19AuthenticationEntity
-import net.nekocurit.x19.data.game.X19NetworkServerJoinInfo.Companion.asX19NetworkServerJoinInfo
 
 class WPLauncherAccountAPI(var session: WPLauncherSession) {
 
@@ -68,16 +67,6 @@ class WPLauncherAccountAPI(var session: WPLauncherSession) {
     suspend fun doLoginStart() = postWithAuth("/interconn/web/game-play-v2/login-start", """{"strict_mode":true}""")
         .body<ResponseX19Base>()
         .throwOnNotOk()
-
-    /**
-     * 获取网络服务器连接信息
-     *
-     * @param serverId 服务器Id
-     */
-    suspend fun getNetworkServerAddress(serverId: ULong) = postWithAuth("/item-address/get", """{"item_id":"$serverId"}""")
-        .body<ResponseX19Base>()
-        .throwOnNotOk()
-        .asX19NetworkServerJoinInfo()
 
     /**
      * 登出账号
