@@ -2,9 +2,7 @@ package net.nekocurit.x19.data.game
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.decodeFromJsonElement
-import net.nekocurit.utils.json
-import net.nekocurit.x19.data.ResponseX19Base
+import net.nekocurit.x19.data.X19Entity
 
 @Serializable
 data class X19NetworkServerJoinInfo(
@@ -15,12 +13,7 @@ data class X19NetworkServerJoinInfo(
     @SerialName("ip")
     val host: String,
     val port: Int
-) {
-
+): X19Entity() {
     val address
         get() = "$host:$port"
-
-    companion object {
-        fun ResponseX19Base.asX19NetworkServerJoinInfo() = json.decodeFromJsonElement<X19NetworkServerJoinInfo>(this.entity)
-    }
 }
