@@ -1,6 +1,7 @@
 package net.nekocurit.x19.api
 
 import io.ktor.client.call.body
+import kotlinx.serialization.json.JsonPrimitive
 import net.nekocurit.x19.WPLauncherAccountAPI
 import net.nekocurit.x19.data.ResponseX19Base
 import net.nekocurit.x19.data.ResponseX19BaseMulti
@@ -61,7 +62,7 @@ suspend fun WPLauncherAccountAPI.likeComment(userId: ULong, commentId: ULong) = 
  */
 suspend fun WPLauncherAccountAPI.sendItemComment(itemId: ULong, content: String, replyId: ULong = 0UL) = postWithAuth(
     path = "/user-item-comment",
-    body = """{"entity_id":"0","user_id":"${session.id}","item_id":"$itemId","content":"$content","master_id":"$replyId","reply_id":"$replyId","total_like":0,"create_time":${Clock.System.now().toEpochMilliseconds()},"comment_type":0}"""
+    body = """{"entity_id":"0","user_id":"${session.id}","item_id":"$itemId","content":${JsonPrimitive(content)},"master_id":"$replyId","reply_id":"$replyId","total_like":0,"create_time":${Clock.System.now().toEpochMilliseconds()},"comment_type":0}"""
 )
     .body<ResponseX19Base>()
     .throwOnNotOk()
