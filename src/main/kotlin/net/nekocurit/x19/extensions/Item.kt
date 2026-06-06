@@ -3,10 +3,6 @@ package net.nekocurit.x19.extensions
 import net.nekocurit.utils.easyMultiPage
 import net.nekocurit.x19.WPLauncherAccountAPI
 import net.nekocurit.x19.api.getAvailableItems
-import net.nekocurit.x19.api.getItemComments
-import net.nekocurit.x19.api.getTopItemComments
-import net.nekocurit.x19.data.item.X19Comment
-import net.nekocurit.x19.data.item.X19ItemSimple
 
 
 /**

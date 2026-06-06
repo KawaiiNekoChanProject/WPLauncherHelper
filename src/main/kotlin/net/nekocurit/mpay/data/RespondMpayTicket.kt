@@ -2,7 +2,6 @@ package net.nekocurit.mpay.data
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import net.nekocurit.mpay.entity.MpayUser
 
 @Serializable
 data class RespondMpayTicket(

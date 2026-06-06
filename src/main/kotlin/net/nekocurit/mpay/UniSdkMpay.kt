@@ -117,7 +117,7 @@ class UniSdkMpay(val project: String = "aecfrxodyqaaaajp-g-x19", val version: St
                 append("mobile", phone)
                 @Suppress("SpellCheckingInspection")
                 append("smscode", code)
-                append("up_content", "");
+                append("up_content", "")
             }
         )
         .checkError()
