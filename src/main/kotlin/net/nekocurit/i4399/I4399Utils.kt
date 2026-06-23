@@ -1,44 +1,92 @@
 package net.nekocurit.i4399
 
 import io.ktor.client.*
-import io.ktor.client.plugins.cookies.*
-import io.ktor.client.plugins.defaultRequest
+import io.ktor.client.plugins.*
 import io.ktor.client.request.*
 import io.ktor.client.request.forms.*
 import io.ktor.client.statement.*
-import io.ktor.http.HttpHeaders
-import net.nekocurit.i4399.data.Request4399Register
+import io.ktor.http.*
 import net.nekocurit.i4399.state.State4399Captcha
+import net.nekocurit.utils.nextString
+import kotlin.random.Random
 
 object I4399Utils {
+
+    const val APP_ID = "kid_wdsj"
+
+    suspend fun requestSession() = HttpClient {
+        defaultRequest {
+            url("https://ptlogin.4399.com/")
+            header(HttpHeaders.UserAgent, Random.nextString(16))
+        }
+    }
+        .get("ptlogin/regFrame.do?regMode=reg_normal&appId=$APP_ID")
+        .headers
+        .getAll(HttpHeaders.SetCookie)
+        ?.joinToString("; ") { it.split(";")[0] }
+        ?: error("请求会话失败")
 
     suspend fun register(
         username: String,
         password: String,
         personal: Pair<String, String>,
+        session: String? = null,
         ocr: suspend (ByteArray) -> String
     ) {
+        val session = session ?: requestSession()
         val client = HttpClient {
-            install(HttpCookies)
             defaultRequest {
-                header(HttpHeaders.UserAgent, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) $username 0.0.0.0")
+                url("https://ptlogin.4399.com/")
+                header(HttpHeaders.UserAgent, Random.nextString(16))
+                header(HttpHeaders.Cookie, session)
             }
         }
 
-        val captcha = client.get("https://ptlogin.4399.com/ptlogin/regFrame.do?regMode=reg_normal&postLoginHandler=default&bizId=&redirectUrl=&displayMode=popup&css=%2F%2Fwww.4399.com%2Fcss%2F4399_index_skin.css&appId=www_home&gameId=&noEmail=false&regIdcard=false&autoLogin=true&cid=&aid=&ref=&level=4&mainDivId=popup_reg_div&includeFcmInfo=false&externalLogin=qq&fcmFakeValidate=true&expandFcmInput=true&userNameLabel=4399%E7%94%A8%E6%88%B7%E5%90%8D&userNameTip=%E8%AF%B7%E8%BE%93%E5%85%A54399%E7%94%A8%E6%88%B7%E5%90%8D&welcomeTip=%E6%AC%A2%E8%BF%8E%E5%9B%9E%E5%88%B04399&v=1770017834851&iframeId=popup_reg_frame")
+        val captcha = client.get("ptlogin/regFrame.do?regMode=reg_normal&appId=$APP_ID")
             .bodyAsText()
             .let { Regex("""javascript:UniLoginChangPIC\('(.*?)'\)""").find(it)?.groupValues?.get(1) }
             ?.let { session ->
-                val img = client.get("https://ptlogin.4399.com/ptlogin/captcha.do?captchaId=$session").bodyAsBytes()
+                val img = client.get("ptlogin/captcha.do?captchaId=$session").bodyAsBytes()
                 return@let State4399Captcha(session, ocr(img))
             }
 
+        if (client.get("ptlogin/isExist.do?username=$username&appId=$APP_ID&regMode=reg_normal&v=1").bodyAsText() != "0") error("用户名已被占用")
+
         client.submitForm(
-            url = "https://ptlogin.4399.com/ptlogin/register.do",
-            formParameters = Request4399Register(username, password, personal, captcha).toParameters()
+            url = "ptlogin/register.do",
+            formParameters = Parameters.build {
+                append("appId", APP_ID)
+                append("regMode", "reg_normal")
+                append("regIdcard", "true")
+                append("mainDivId", "popup_reg_div")
+                append("showRegInfo", "true")
+                append("includeFcmInfo", "false")
+                append("expandFcmInput", "true")
+                append("fcmFakeValidate", "false")
+                append("realnameValidate", "true")
+                append("userNameLabel", "4399用户名")
+                append("level", "4")
+                append("sec", "1")
+                append("password", I4399EncryptUtils.encrypt(password))
+                append("passwordveri", I4399EncryptUtils.encrypt(password))
+                append("realname", I4399EncryptUtils.encrypt(personal.first))
+                append("idcard", I4399EncryptUtils.encrypt(personal.second))
+                append("username", username)
+                append("reg_eula_agree", "on")
+                append("autoLogin", "on")
+                captcha?.also { captcha ->
+                    append("sessionId", captcha.session)
+                    append("inputCaptcha", captcha.code)
+                }
+            }
         )
             .bodyAsText()
             .also { text ->
+                if (text.contains("请稍后再试~")) error("风控拦截")
+                Regex("""<div class="login_error">\s*<strong>(.+)<br>&nbsp;</strong>\s*</div>""")
+                    .find(text)
+                    ?.groupValues[1]
+                    ?.also { error(it) }
                 Regex("""<div[^>]*id="Msg"[^>]*class="login_hor login_err_tip"[^>]*>\s*(.*?)\s*</div>""")
                     .find(text)
                     ?.groupValues[1]
