@@ -1,6 +1,6 @@
 [versions]
 kotlin = "2.4.10"
-ktor = "3.5.1"
+ktor = "3.5.2"
 vanniktech-maven-publish = "0.37.0"
 
 korlibs-crypto = "6.0.1"
