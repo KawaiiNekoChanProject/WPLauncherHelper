@@ -2,30 +2,27 @@ package net.nekocurit.x19
 
 import io.ktor.client.*
 import io.ktor.client.call.*
-import io.ktor.client.plugins.*
-import io.ktor.client.plugins.contentnegotiation.*
+import io.ktor.client.engine.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
-import io.ktor.http.*
-import io.ktor.serialization.kotlinx.json.*
 import net.nekocurit.utils.json
+import net.nekocurit.utils.newPrivateHttpClient
 import net.nekocurit.x19.data.ResponseX19Base
 import net.nekocurit.x19.data.WPLauncherSession
-import net.nekocurit.x19.data.entity.X19AuthenticationEntity
 import net.nekocurit.x19.data.entity.X19AuthenticationEntity.Companion.asX19AuthenticationEntity
 
-class WPLauncherAccountAPI(var session: WPLauncherSession) {
+class WPLauncherAccountAPI(
+    val client: HttpClient,
+    var session: WPLauncherSession
+) {
 
-    constructor(id: ULong, token: String): this(WPLauncherSession(id, token))
-    constructor(entity: X19AuthenticationEntity): this(WPLauncherSession(entity))
-
-    val client = HttpClient {
-        install(ContentNegotiation) {
-            json(json, contentType = ContentType.Any)
-        }
-        defaultRequest {
-            userAgent("WPFLauncher/0.0.0.0")
-        }
+    companion object {
+        fun newInstance(session: WPLauncherSession) = WPLauncherAccountAPI(newPrivateHttpClient(WPLauncherAPI.internal), session)
+        fun <T : HttpClientEngineConfig> newInstance(
+            session: WPLauncherSession,
+            engine: HttpClientEngineFactory<T>,
+            engineConfig: T.() -> Unit = { }
+        ) = WPLauncherAccountAPI(newPrivateHttpClient(engine, engineConfig, WPLauncherAPI.internal), session)
     }
 
     /**

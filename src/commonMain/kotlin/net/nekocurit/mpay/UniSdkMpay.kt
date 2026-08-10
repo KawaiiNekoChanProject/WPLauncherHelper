@@ -2,12 +2,13 @@ package net.nekocurit.mpay
 
 import io.ktor.client.*
 import io.ktor.client.call.*
-import io.ktor.client.plugins.*
-import io.ktor.client.plugins.contentnegotiation.*
+import io.ktor.client.engine.*
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.request.forms.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
-import io.ktor.serialization.kotlinx.json.*
+import io.ktor.serialization.kotlinx.json.json
 import io.ktor.utils.io.core.*
 import net.nekocurit.mpay.data.RespondMpayDeviceRegister
 import net.nekocurit.mpay.data.RespondMpayLogin
@@ -20,26 +21,35 @@ import net.nekocurit.utils.md5
 import net.nekocurit.utils.nextMacAddress
 import net.nekocurit.utils.nextString
 import net.nekocurit.x19.WPLUpdaterAPI
+import net.nekocurit.utils.newPrivateHttpClient
 import kotlin.io.encoding.Base64
 import kotlin.random.Random
 import kotlin.time.Clock
 import kotlin.uuid.Uuid
 
-class UniSdkMpay(val project: String = "aecfrxodyqaaaajp-g-x19", val version: String) {
+class UniSdkMpay(
+    val client: HttpClient,
+    val project: String = "aecfrxodyqaaaajp-g-x19",
+    val version: String
+) {
 
     companion object {
+        val internal: HttpClientConfig<*>.() -> Unit = {
+            install(ContentNegotiation) {
+                json(json)
+            }
+            defaultRequest {
+                url("https://service.mkey.163.com")
+            }
+        }
         @Suppress("SpellCheckingInspection")
         const val SCOPE = "nickname,avatar,realname_status,mobile_bind_status,mask_related_mobile,related_login_status"
-        suspend fun newInstance() = UniSdkMpay(version = WPLUpdaterAPI.get().version)
-    }
-
-    val client = HttpClient {
-        install(ContentNegotiation) {
-            json(json)
-        }
-        defaultRequest {
-            url("https://service.mkey.163.com")
-        }
+        suspend fun newInstance() = newInstance(newPrivateHttpClient(internal))
+        suspend fun <T : HttpClientEngineConfig> newInstance(
+            engine: HttpClientEngineFactory<T>,
+            engineConfig: T.() -> Unit = { }
+        ) = newInstance(newPrivateHttpClient(engine, engineConfig, internal))
+        suspend fun newInstance(client: HttpClient) = UniSdkMpay(client, version = WPLUpdaterAPI(client).get().version)
     }
 
     /**

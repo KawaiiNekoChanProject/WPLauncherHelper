@@ -4,6 +4,7 @@ package net.nekocurit.i4399.game_sdk
 
 import io.ktor.client.*
 import io.ktor.client.call.*
+import io.ktor.client.engine.*
 import io.ktor.client.plugins.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.plugins.cookies.*
@@ -25,20 +26,32 @@ import net.nekocurit.i4399.game_sdk.utils.decodeForms
 import net.nekocurit.i4399.game_sdk.utils.toParameters
 import net.nekocurit.i4399.x19.data.Response4399X19Done
 import net.nekocurit.i4399.x19.data.Response4399X19Oauth
+import net.nekocurit.utils.newPrivateHttpClient
 import net.nekocurit.x19.data.cookie.WPLauncherCookie4399Com
 import kotlin.time.Duration.Companion.seconds
 
-class I4399GameSDKAPI(val config: Config, var session: I4399GameSDKOauthSession? = null) {
-
-    val client = HttpClient {
-        install(HttpCookies)
-        install(ContentNegotiation) {
-            json(Json { ignoreUnknownKeys = true }, contentType = ContentType.Any)
+class I4399GameSDKAPI(
+    val config: Config,
+    var session: I4399GameSDKOauthSession? = null,
+    val client: HttpClient
+) {
+    companion object {
+        val internal: HttpClientConfig<*>.() -> Unit = {
+            install(HttpCookies)
+            install(ContentNegotiation) {
+                json(Json { ignoreUnknownKeys = true }, contentType = ContentType.Any)
+            }
+            defaultRequest {
+                url("https://ptlogin.4399.com")
+                header(HttpHeaders.UserAgent, "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36")
+            }
         }
-        defaultRequest {
-            url(I4399_API_URL.toString())
-            header(HttpHeaders.UserAgent, "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0")
-        }
+        fun newInstance(config: Config) = I4399GameSDKAPI(config, client = newPrivateHttpClient(internal))
+        fun <T : HttpClientEngineConfig> newInstance(
+            config: Config,
+            engine: HttpClientEngineFactory<T>,
+            engineConfig: T.() -> Unit = { }
+        ) = I4399GameSDKAPI(config, client = newPrivateHttpClient(engine, engineConfig, internal))
     }
 
     /**
@@ -167,6 +180,19 @@ class I4399GameSDKAPI(val config: Config, var session: I4399GameSDKOauthSession?
         forms2.appendCaptcha(captcha)
 
         delay(5.seconds) // 4399有间隔检测或者是生成的会话凭据尚未被写入redis(仅为猜测) 不进行延迟无法注册
+
+        buildString {
+            append("curl --url 'https://ptlogin.4399.com/oauth2/registerAndAuthorize.do' ")
+
+            append("-b '")
+            append(client.cookies("https://ptlogin.4399.com").joinToString("; ") { "${it.name}=${it.value}" })
+            append("' ")
+
+            append("-H 'User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36' ")
+            append("-H 'Content-Type: application/x-www-form-urlencoded; charset=UTF-8' ")
+
+            append("--data-raw '${forms2.toParameters().formUrlEncode()}'")
+        }
 
         val respondStep1 = client.submitForm(url = "/oauth2/registerAndAuthorize.do", formParameters = forms2.toParameters())
         when (respondStep1.status) {

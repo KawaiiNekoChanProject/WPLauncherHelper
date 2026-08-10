@@ -6,4 +6,4 @@ import net.nekocurit.x19.data.cookie.AbstractWPLauncherCookie
 suspend fun WPLauncherAPI.login(cookie: AbstractWPLauncherCookie) = cookie
     .also { uniCookie(it) }
     .let { authentication(cookie, loginCookie(cookie)) }
-    .toAccountAPI()
+    .toAccountAPI(client)

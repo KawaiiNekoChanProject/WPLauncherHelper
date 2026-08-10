@@ -67,7 +67,7 @@ data class RequestX19Authentication(
     }
 
     companion object {
-        suspend fun fromLoginOtpRespond(cookie: AbstractWPLauncherCookie, data: X19LoginOtp) = RequestX19Authentication(cookie, data, WPLUpdaterAPI.get().version)
+        suspend fun fromLoginOtpRespond(cookie: AbstractWPLauncherCookie, data: X19LoginOtp) = RequestX19Authentication(cookie, data, WPLUpdaterAPI.newInstance().get().version)
     }
 
     constructor(cookie: AbstractWPLauncherCookie, data: X19LoginOtp, latest: String): this(

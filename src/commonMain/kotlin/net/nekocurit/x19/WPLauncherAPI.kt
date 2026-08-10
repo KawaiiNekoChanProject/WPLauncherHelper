@@ -2,12 +2,13 @@ package net.nekocurit.x19
 
 import io.ktor.client.*
 import io.ktor.client.call.*
-import io.ktor.client.plugins.*
-import io.ktor.client.plugins.contentnegotiation.*
+import io.ktor.client.engine.*
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
-import io.ktor.serialization.kotlinx.json.*
+import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import net.nekocurit.utils.json
@@ -19,17 +20,26 @@ import net.nekocurit.x19.data.cookie.AbstractWPLauncherCookie
 import net.nekocurit.x19.data.entity.X19AuthenticationEntity.Companion.asX19AuthenticationEntity
 import net.nekocurit.x19.data.entity.X19LoginOtp
 import net.nekocurit.x19.data.entity.X19LoginOtp.Companion.asX19LoginOtp
+import net.nekocurit.utils.newPrivateHttpClient
 import kotlin.random.Random
 
-object WPLauncherAPI {
-
-    val client = HttpClient {
-        install(ContentNegotiation) {
-            json(json, contentType = ContentType.Any)
+class WPLauncherAPI(
+    val client: HttpClient,
+) {
+    companion object {
+        val internal: HttpClientConfig<*>.() -> Unit = {
+            install(ContentNegotiation) {
+                json(json, contentType = ContentType.Any)
+            }
+            defaultRequest {
+                userAgent("WPFLauncher/0.0.0.0")
+            }
         }
-        defaultRequest {
-            userAgent("WPFLauncher/0.0.0.0")
-        }
+        fun newInstance() = WPLauncherAPI(newPrivateHttpClient(internal))
+        fun <T : HttpClientEngineConfig> newInstance(
+            engine: HttpClientEngineFactory<T>,
+            engineConfig: T.() -> Unit = { }
+        ) = WPLauncherAPI(newPrivateHttpClient(engine, engineConfig, internal))
     }
 
     suspend fun uniCookie(cookie: AbstractWPLauncherCookie) {

@@ -18,7 +18,7 @@ data class I4399GameSDKCaptcha(
 
         suspend fun newInstance(api: I4399GameSDKAPI, id: String, block: suspend (ByteArray) -> String) = I4399GameSDKCaptcha(
             id = id,
-            code = block(api.client.get("https://ptlogin.4399.com/ptlogin/captcha.do?captchaId=$id").bodyAsBytes())
+            code = block(api.client.get("/ptlogin/captcha.do?captchaId=$id").bodyAsBytes())
         )
 
         fun MutableMap<String, String>.appendCaptcha(entity: I4399GameSDKCaptcha?) = apply {
