@@ -72,6 +72,9 @@ repositories {
 dependencies {
     // 把 ${version} 替换成最新版本
     implementation("io.github.kawaiinekochanproject:wplauncher-helper:${version}")
+    // 同时还需要引入一个 ktor http客户端 引擎
+    // https://ktor.io/docs/client-engines.html
+    implementation("io.ktor:ktor-client-java:${ktorVersion}")
 }
 ```
 
@@ -95,7 +98,7 @@ fun main(vararg args: String) {
             }
             false -> {
                 // 4399 mixed login
-                val api = I4399GameSDKAPI(CONFIG_NET_EASE_MC)
+                val api = I4399GameSDKAPI.newInstance(CONFIG_NET_EASE_MC)
                 api.registerDevice()
 
                 api.login(
@@ -114,9 +117,9 @@ fun main(vararg args: String) {
 
         println("Cookie:")
         println(state.toWrappedCookie())
-
+        
         // x19 protocol
-        val x19 = WPLauncherAPI.login(state)
+        val x19 = WPLauncherAPI.newInstance().login(state)
         val self = x19.getSelfDetail()
         println("WPLauncher profile: ${self.name} (${x19.session.id})")
 
