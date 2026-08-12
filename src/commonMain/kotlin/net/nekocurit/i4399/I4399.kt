@@ -1,19 +1,24 @@
 package net.nekocurit.i4399
 
 import io.ktor.client.*
+import io.ktor.client.call.body
 import io.ktor.client.engine.*
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.cookies.*
 import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.request.*
 import io.ktor.client.request.forms.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
+import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.delay
 import net.nekocurit.i4399.data.I4399Profile
 import net.nekocurit.i4399.data.Request4399SetIdCardAndRealName
+import net.nekocurit.i4399.data.RespondI4399ChangePasswordBase
 import net.nekocurit.i4399.game_sdk.utils.decodeForms
 import net.nekocurit.i4399.game_sdk.utils.toParameters
 import net.nekocurit.i4399.state.State4399Captcha
+import net.nekocurit.utils.json
 import net.nekocurit.utils.newPrivateHttpClient
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.seconds
@@ -25,6 +30,9 @@ class I4399(
     companion object {
         val internal: HttpClientConfig<*>.() -> Unit = {
             install(HttpCookies)
+            install(ContentNegotiation) {
+                json(json)
+            }
             defaultRequest {
                 url(I4399_API)
             }
@@ -191,6 +199,30 @@ class I4399(
                 append("qq", "")
             }
         )
+    }
+
+    /**
+     * 更改账号密码 更改后会从所有设备退出登录
+     *
+     * @param old 旧密码
+     * @param new 新密码
+     */
+    suspend fun changePassword(old: String, new: String) {
+        client.submitForm(
+            url = "https://u.4399.com/security/service/security/verifyConfirm",
+            formParameters = Parameters.build {
+                append("type", "pwd")
+                append("code", old)
+            }
+        ).body<RespondI4399ChangePasswordBase>().checkError()
+        client.submitForm(
+            url = "https://u.4399.com/security/service/security/pwd",
+            formParameters = Parameters.build {
+                append("pwd", I4399EncryptUtils.encrypt2(new))
+                append("pwdC", I4399EncryptUtils.encrypt2(new))
+                append("ver", "2")
+            }
+        ).body<RespondI4399ChangePasswordBase>().checkError()
     }
 
     /**

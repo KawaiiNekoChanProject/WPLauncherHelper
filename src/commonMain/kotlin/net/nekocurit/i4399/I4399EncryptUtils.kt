@@ -27,6 +27,24 @@ object I4399EncryptUtils {
         return Base64.encode(out)
     }
 
+    fun encrypt2(text: String): String {
+        val password = "aqPW2gbMYwz".encodeToByteArray()
+        val salt = Random.nextBytes(8)
+
+        val keyIv = evpBytesToKey(password, salt, 48)
+
+        val key = keyIv.copyOfRange(0, 32)
+        val iv = keyIv.copyOfRange(32, 48)
+
+        val encrypted = AES(key)
+            .with(CBC, PKCS7Padding, iv)
+            .encrypt(text.encodeToByteArray())
+
+        val out = "Salted__".encodeToByteArray() + salt + encrypted
+
+        return Base64.encode(out)
+    }
+
     private fun evpBytesToKey(
         password: ByteArray,
         salt: ByteArray,
