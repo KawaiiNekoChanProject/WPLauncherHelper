@@ -19,6 +19,10 @@ kotlin {
     linuxArm64()
     mingwX64()
     macosArm64()
+    js {
+        browser()
+        nodejs()
+    }
 
     sourceSets {
         commonMain.dependencies {
