@@ -15,8 +15,9 @@ import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import kotlinx.coroutines.delay
 import kotlinx.serialization.json.Json
-import net.nekocurit.I4399_API_URL
+import net.nekocurit.i4399.I4399_API_URL
 import net.nekocurit.i4399.I4399EncryptUtils
+import net.nekocurit.i4399.I4399_API
 import net.nekocurit.i4399.game_sdk.config.Config
 import net.nekocurit.i4399.game_sdk.entity.I4399GameSDKCaptcha.Companion.appendCaptcha
 import net.nekocurit.i4399.game_sdk.entity.I4399GameSDKCaptcha.Companion.doCaptcha
@@ -27,7 +28,9 @@ import net.nekocurit.i4399.game_sdk.utils.toParameters
 import net.nekocurit.i4399.x19.data.Response4399X19Done
 import net.nekocurit.i4399.x19.data.Response4399X19Oauth
 import net.nekocurit.utils.newPrivateHttpClient
+import net.nekocurit.utils.nextString
 import net.nekocurit.x19.data.cookie.WPLauncherCookie4399Com
+import kotlin.random.Random
 import kotlin.time.Duration.Companion.seconds
 
 class I4399GameSDKAPI(
@@ -42,8 +45,9 @@ class I4399GameSDKAPI(
                 json(Json { ignoreUnknownKeys = true }, contentType = ContentType.Any)
             }
             defaultRequest {
-                url("https://ptlogin.4399.com")
-                header(HttpHeaders.UserAgent, "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36")
+                url(I4399_API)
+                // TODO: 实现 kotlin 版 fake-useragent
+                header(HttpHeaders.UserAgent, "Mozilla/5.0 ${Random.nextString(16)}/${Random.nextString(16)}")
             }
         }
         fun newInstance(config: Config) = I4399GameSDKAPI(config, client = newPrivateHttpClient(internal))
@@ -180,19 +184,6 @@ class I4399GameSDKAPI(
         forms2.appendCaptcha(captcha)
 
         delay(5.seconds) // 4399有间隔检测或者是生成的会话凭据尚未被写入redis(仅为猜测) 不进行延迟无法注册
-
-        buildString {
-            append("curl --url 'https://ptlogin.4399.com/oauth2/registerAndAuthorize.do' ")
-
-            append("-b '")
-            append(client.cookies("https://ptlogin.4399.com").joinToString("; ") { "${it.name}=${it.value}" })
-            append("' ")
-
-            append("-H 'User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36' ")
-            append("-H 'Content-Type: application/x-www-form-urlencoded; charset=UTF-8' ")
-
-            append("--data-raw '${forms2.toParameters().formUrlEncode()}'")
-        }
 
         val respondStep1 = client.submitForm(url = "/oauth2/registerAndAuthorize.do", formParameters = forms2.toParameters())
         when (respondStep1.status) {

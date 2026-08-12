@@ -1,19 +1,40 @@
 package net.nekocurit.i4399
 
 import io.ktor.client.*
+import io.ktor.client.engine.*
 import io.ktor.client.plugins.cookies.*
+import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.request.*
 import io.ktor.client.request.forms.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
+import kotlinx.coroutines.delay
 import net.nekocurit.i4399.data.I4399Profile
 import net.nekocurit.i4399.data.Request4399SetIdCardAndRealName
+import net.nekocurit.i4399.game_sdk.utils.decodeForms
+import net.nekocurit.i4399.game_sdk.utils.toParameters
 import net.nekocurit.i4399.state.State4399Captcha
+import net.nekocurit.utils.newPrivateHttpClient
 import kotlin.time.Clock
+import kotlin.time.Duration.Companion.seconds
 
-class I4399 {
-    val client = HttpClient {
-        install(HttpCookies)
+class I4399(
+    val client: HttpClient,
+    var appId: String = "www_home"
+) {
+    companion object {
+        val internal: HttpClientConfig<*>.() -> Unit = {
+            install(HttpCookies)
+            defaultRequest {
+                url(I4399_API)
+            }
+        }
+        fun newInstance(appId: String = "www_home") = I4399(newPrivateHttpClient(internal), appId)
+        fun <T : HttpClientEngineConfig> newInstance(
+            engine: HttpClientEngineFactory<T>,
+            engineConfig: T.() -> Unit = { },
+            appId: String = "www_home"
+        ) = I4399(newPrivateHttpClient(engine, engineConfig, internal), appId)
     }
 
     /**
@@ -30,33 +51,25 @@ class I4399 {
         ocr: suspend (ByteArray) -> String,
         doRealName: suspend () -> Pair<String, String>
     ) {
-        // 调用此请求以获取 phlogact 与 USESSIONID
-        client.get("https://ptlogin.4399.com/ptlogin/loginFrame.do")
+        val forms1 = client.get("ptlogin/loginFrame.do?appId=www_home").decodeForms("""<a class="login_feedback"""")
 
-        val captcha = client.get("https://ptlogin.4399.com/ptlogin/verify.do?username=$username&appId=www_home&t=${Clock.System.now()}&inputWidth=iptw2&v=1")
+        val captcha = client.get("ptlogin/verify.do?username=$username&appId=$appId&t=${Clock.System.now()}&inputWidth=iptw2&v=1")
             .bodyAsText()
             .let { Regex("""javascript:UniLoginChangPIC\('(.*?)'\)""").find(it)?.groupValues?.get(1) }
             ?.let { session ->
-                val img = client.get("https://ptlogin.4399.com/ptlogin/captcha.do?captchaId=$session").bodyAsBytes()
+                val img = client.get("ptlogin/captcha.do?captchaId=$session").bodyAsBytes()
                 return@let State4399Captcha(session, ocr(img))
             }
 
-        client.submitForm(
-            url = "https://ptlogin.4399.com/ptlogin/login.do?v=1",
-            formParameters = Parameters.build {
-                append("appId", "www_home")
-                append("sec", "1")
-                append("autoLogin", "on")
+        forms1["username"] = username
+        forms1["password"] = I4399EncryptUtils.encrypt(password)
+        forms1["autoLogin"] = "on"
+        captcha?.also { captcha ->
+            forms1["sessionId"] = captcha.session
+            forms1["inputCaptcha"] = captcha.code
+        }
 
-                append("password", I4399EncryptUtils.encrypt(password))
-                append("username", username)
-
-                captcha?.also { captcha ->
-                    append("sessionId", captcha.session)
-                    append("inputCaptcha", captcha.code)
-                }
-            }
-        )
+        client.submitForm("ptlogin/login.do?v=1", forms1.toParameters())
             .also {
                 val response = it.bodyAsText()
 
@@ -67,7 +80,7 @@ class I4399 {
                         val realName = doRealName()
 
                         client.submitForm(
-                            url = "https://ptlogin.4399.com/ptlogin/setIdcardAndRealname.do",
+                            url = "ptlogin/setIdcardAndRealname.do",
                             formParameters = Request4399SetIdCardAndRealName(realName.first, realName.second).toParameters()
                         )
                     }
@@ -79,11 +92,64 @@ class I4399 {
                     Regex(""" eventHandles.__errorCallback\('(.*?)'\);""")
                         .find(response)
                         ?.also { group -> error(group.groupValues[1]) }
-
-                    println(response)
                 }
             }
     }
+
+    /**
+     * 创建账号并登录
+     *
+     * @param username 用户名
+     * @param password 密码
+     * @param personal 实名信息
+     * @param ocr 如果遇到图像识别挑战则调用此处获取结果
+     */
+    suspend fun register(
+        username: String,
+        password: String,
+        personal: Pair<String, String>,
+        ocr: suspend (ByteArray) -> String
+    ) {
+        val respond = client.get("ptlogin/regFrame.do?regMode=reg_normal&appId=$appId")
+        delay(3.seconds)
+        val forms1 = respond.decodeForms("""<div id="Msg" class="login_hor login_err_tip">""")
+        val captcha = respond.bodyAsText()
+            .let { Regex("""javascript:UniLoginChangPIC\('(.*?)'\)""").find(it)?.groupValues?.get(1) }
+            ?.let { session ->
+                val img = client.get("ptlogin/captcha.do?captchaId=$session").bodyAsBytes()
+                return@let State4399Captcha(session, ocr(img))
+            }
+
+        if (client.get("ptlogin/isExist.do?username=$username&appId=$appId&regMode=reg_normal&v=1").bodyAsText() != "0") error("用户名已被占用")
+
+        forms1["username"] = username
+        forms1["password"] = I4399EncryptUtils.encrypt(password)
+        forms1["passwordveri"] = I4399EncryptUtils.encrypt(password)
+        forms1["realname"] = I4399EncryptUtils.encrypt(personal.first)
+        forms1["idcard"] = I4399EncryptUtils.encrypt(personal.second)
+        forms1["reg_eula_agree"] = "on"
+        forms1["autoLogin"] = "on"
+
+        captcha?.also { captcha ->
+            forms1["sessionId"] = captcha.session
+            forms1["inputCaptcha"] = captcha.code
+        }
+
+        client.submitForm("ptlogin/register.do", forms1.toParameters())
+            .bodyAsText()
+            .also { text ->
+                if (text.contains("请稍后再试~")) error("风控拦截")
+                Regex("""<div class="login_error">\s*<strong>(.+)<br>&nbsp;</strong>\s*</div>""")
+                    .find(text)
+                    ?.groupValues[1]
+                    ?.also { error(it) }
+                Regex("""<div[^>]*id="Msg"[^>]*class="login_hor login_err_tip"[^>]*>\s*(.*?)\s*</div>""")
+                    .find(text)
+                    ?.groupValues[1]
+                    ?.also { error(it) }
+            }
+    }
+
 
     /**
      * 获取当前登录账号的 4399 资料
@@ -109,11 +175,6 @@ class I4399 {
             .bodyAsText()
             .let { Regex("""<input\s+type="hidden"\s+name="__HASH__"\s+value="([^"]+)"""").find(it)?.groupValues[1] }
             ?: error("no hash")
-
-        println(hash)
-        client.cookies("https://u.4399.com").forEach {
-            println(it.name + "  " + it.value)
-        }
 
         client.submitForm(
             url = "https://u.4399.com/profile/modify-save.html",
