@@ -23,6 +23,5 @@ data class X19CloudSaveUpload(
             header(HttpHeaders.Expect, "100-continue")
             setBody(data)
         }
-            .also { println(it.status.value)}
     }
 }
