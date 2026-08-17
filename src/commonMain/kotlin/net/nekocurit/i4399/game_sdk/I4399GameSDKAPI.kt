@@ -112,6 +112,7 @@ class I4399GameSDKAPI(
         return client.submitForm(url = "/oauth2/loginAndAuthorize.do?channel=&sdk=op", formParameters = forms2.toParameters())
             .let { respondLogin ->
                 when (respondLogin.status) {
+                    HttpStatusCode.Accepted -> error(respondLogin.bodyAsText())
                     HttpStatusCode.OK -> respondLogin.bodyAsText()
                         .let login@{ text ->
                             // 通常失败提示
