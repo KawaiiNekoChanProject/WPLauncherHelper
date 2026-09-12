@@ -24,12 +24,13 @@ suspend fun WPLauncherAccountAPI.requestItemLike(itemId: ULong) = postWithAuth(
 /**
  * 更新对组件是否喜欢
  *
- * @param like 实例
+ * @param commentId 是否喜欢实例Id
+ * @param itemId 组件Id
  * @param flag 是否喜欢  null = 清空状态
  */
-suspend fun WPLauncherAccountAPI.updateItemLike(like: X19ItemLike, flag: Boolean?) = postWithAuth(
+suspend fun WPLauncherAccountAPI.updateItemLike(commentId: ULong, itemId: ULong, flag: Boolean?) = postWithAuth(
     path = "/user-item-like/update",
-    body = """{"entity_id":"${like.id}","item_id":"${like.itemId}","user_id":"${session.id}","has_like":${flag.toHasLikeId()}}"""
+    body = """{"entity_id":"$commentId","item_id":"$itemId","user_id":"${session.id}","has_like":${flag.toHasLikeId()}}"""
 )
     .body<ResponseX19Base>()
     .throwOnNotOk()
