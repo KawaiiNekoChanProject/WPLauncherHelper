@@ -45,7 +45,10 @@ data class X19ItemDetails(
     @SerialName("online_count")
     val currentOnline: ULong = 0UL,
     @SerialName("tag_list")
-    val otherTags: List<Tag>
+    val otherTags: List<Tag> = emptyList(),
+    @SerialName("comment_id")
+    val commentId: ULong? = null,
+    val liked: Int? = null,
 ): X19AuthEntity() {
 
     val developer
