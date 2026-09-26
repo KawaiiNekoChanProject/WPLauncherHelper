@@ -1,13 +1,13 @@
 <div align="center"><h1>WPLauncherHelper</h1></div>
 
-WPLauncherHelper 是一个使用 Kotlin/JVM 轻量的实现
+WPLauncherHelper 是一个使用 KMP (kotlin 跨平台) 轻量的实现
 
 **您必须合理地使用它, 项目贡献者及所有者 不会承担 使用者 滥用造成的责任**
 
 
 ## 功能列表
 
-- 🟩 Mpay
+- 🟩 MPay
     - 🟩 用户名密码登录
     - 🟩 手机号+一次性代码登录
     - 🟩 手机号+密码登录
@@ -74,7 +74,7 @@ dependencies {
     implementation("io.github.kawaiinekochanproject:wplauncher-helper:${version}")
     // 同时还需要引入一个 ktor http客户端 引擎
     // https://ktor.io/docs/client-engines.html
-    implementation("io.ktor:ktor-client-java:${ktorVersion}")
+    implementation("io.ktor:ktor-client-okhttp:${ktorVersion}")
 }
 ```
 
@@ -102,8 +102,8 @@ fun main(vararg args: String) {
                 api.registerDevice()
 
                 api.login(
-                    username = System.getenv("USERNAME"),
-                    password =  System.getenv("PASSWORD"),
+                    username = username,
+                    password = password,
                     onCaptcha = { raw ->
                         File("captcha.png").writeBytes(raw)
 
