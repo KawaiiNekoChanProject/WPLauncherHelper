@@ -21,6 +21,7 @@ import net.nekocurit.x19.data.entity.X19AuthenticationEntity.Companion.asX19Auth
 import net.nekocurit.x19.data.entity.X19LoginOtp
 import net.nekocurit.x19.data.entity.X19LoginOtp.Companion.asX19LoginOtp
 import net.nekocurit.utils.newPrivateHttpClient
+import net.nekocurit.x19.extensions.toCookieWithUni
 import kotlin.random.Random
 
 class WPLauncherAPI(
@@ -42,16 +43,11 @@ class WPLauncherAPI(
         ) = WPLauncherAPI(newPrivateHttpClient(engine, engineConfig, internal))
     }
 
-    suspend fun uniCookie(cookie: AbstractWPLauncherCookie) {
-        client.post("https://mgbsdk.matrix.netease.com/x19/sdk/uni_sauth") {
-            contentType(ContentType.Application.Json)
-            setBody(JsonObject(cookie.toCookie() + ("client_login_sn" to JsonPrimitive(Random.nextString(16)))))
-        }
-            .body<ResponseX19UniSAuth>()
-            .also {
-                require(it.isOk) {it.message }
-            }
+    suspend fun uniCookie(cookie: AbstractWPLauncherCookie) = client.post("https://mgbsdk.matrix.netease.com/x19/sdk/uni_sauth") {
+        contentType(ContentType.Application.Json)
+        setBody(cookie.toCookieWithUni())
     }
+        .body<ResponseX19UniSAuth>()
 
     suspend fun loginCookie(cookie: AbstractWPLauncherCookie) = client.post("https://x19obtcore.nie.netease.com:8443/login-otp") {
         contentType(ContentType.Application.Json)

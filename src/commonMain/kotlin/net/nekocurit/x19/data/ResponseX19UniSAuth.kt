@@ -9,6 +9,7 @@ data class ResponseX19UniSAuth(
     val code: Int,
     @SerialName("msg")
     val message: String = "",
+    val status: String = "",
     @SerialName("subcode")
     val subCode: Int,
     val aid: ULong = 0UL,
@@ -19,4 +20,8 @@ data class ResponseX19UniSAuth(
 ) {
     val isOk
         get() = code == 200
+
+    fun throwOnNotOk() = apply {
+        if (!isOk) error(message)
+    }
 }

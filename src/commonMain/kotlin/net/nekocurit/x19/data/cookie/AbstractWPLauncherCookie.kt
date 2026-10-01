@@ -9,7 +9,6 @@ import net.nekocurit.utils.json
 
 abstract class AbstractWPLauncherCookie {
     companion object {
-        @Suppress("SpellCheckingInspection")
         @Serializable
         data class Wrapped(
             @SerialName("sauth_json")
