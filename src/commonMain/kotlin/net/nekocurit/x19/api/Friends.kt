@@ -5,6 +5,7 @@ import net.nekocurit.x19.WPLauncherAccountAPI
 import net.nekocurit.x19.data.ResponseX19Base
 import net.nekocurit.x19.data.ResponseX19BaseMulti
 import net.nekocurit.x19.data.friend.X19Friend
+import net.nekocurit.x19.data.friend.X19PendingFriend
 
 /**
  * 主动添加好友
@@ -43,6 +44,16 @@ suspend fun WPLauncherAccountAPI.getFriends() = postWithAuth(
     .body<ResponseX19BaseMulti>()
     .throwOnNotOk()
     .decode<X19Friend>(this)
+
+/**
+ * 获取待定好友列表 (即主动添加登录号待审核列表, 获取列表后可以同意/拒绝)
+ */
+suspend fun WPLauncherAccountAPI.getPendingFriends() = postWithAuth(
+    path = "/user-addme-friends"
+)
+    .body<ResponseX19BaseMulti>()
+    .throwOnNotOk()
+    .decode<X19PendingFriend>(this)
 
 /**
  * 处理好友申请
