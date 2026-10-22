@@ -1,10 +1,12 @@
-package net.nekocurit.x19_bucket
+package net.nekocurit.netease_bucket
 
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.*
+import io.ktor.http.content.OutgoingContent
+import io.ktor.utils.io.ByteReadChannel
 import korlibs.encoding.Base64
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -17,9 +19,9 @@ import net.nekocurit.x19.WPLauncherAPI
 import kotlin.time.Instant
 
 /**
- * X19 对象存储
+ * NetEase 对象存储
  */
-data class X19BucketSession(
+data class NetEaseBucketSession(
     val client: HttpClient,
     val signature: String,
     val rawPolicy: String
@@ -46,7 +48,7 @@ data class X19BucketSession(
             val method: String,
             val url: String,
             val https: Boolean,
-            val uploadLimit: Int,
+            val uploadLimit: Int = 0,
             @SerialName("rmMeta")
             val removeMetadata: Boolean = false,
             val uid: String,
@@ -62,11 +64,11 @@ data class X19BucketSession(
             }
         }
 
-        fun parse(token: String): X19BucketSession {
+        fun parse(token: String): NetEaseBucketSession {
             val token = token.removePrefix("Policy ").split(":")
             require(token.size == 2) { "token 格式错误" }
 
-            return X19BucketSession(newPrivateHttpClient(WPLauncherAPI.internal), token[0], token[1])
+            return NetEaseBucketSession(newPrivateHttpClient(WPLauncherAPI.internal), token[0], token[1])
         }
 
     }
@@ -78,13 +80,17 @@ data class X19BucketSession(
         append(rawPolicy)
     }
 
-    suspend fun upload(raw: ByteArray) = client.post(policy.url) {
+    suspend fun upload(channel: ByteReadChannel) = client.post(policy.url) {
         header(HttpHeaders.Authorization, generateAuthorizationHeader())
-        setBody(raw)
+        setBody(object : OutgoingContent.ReadChannelContent() {
+            override fun readFrom() = channel
+        })
     }
         .apply {
             val body = bodyAsText()
             require(body.startsWith("{")) { body }
         }
         .body<X19BucketFile>()
+
+    suspend fun upload(raw: ByteArray) = upload(ByteReadChannel(raw))
 }

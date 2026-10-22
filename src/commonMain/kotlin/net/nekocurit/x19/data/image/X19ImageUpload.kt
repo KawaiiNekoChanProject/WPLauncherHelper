@@ -8,7 +8,7 @@ import io.ktor.http.HttpHeaders
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import net.nekocurit.x19.data.X19AuthEntity
-import net.nekocurit.x19_bucket.X19BucketSession
+import net.nekocurit.netease_bucket.NetEaseBucketSession
 
 /**
  * @param token 上传凭据
@@ -43,5 +43,5 @@ data class X19ImageUpload(
     }
         .body<ImageMetadata>()
 
-    fun toBucketSession() = X19BucketSession.parse(token)
+    fun toBucketSession() = NetEaseBucketSession.parse(token)
 }

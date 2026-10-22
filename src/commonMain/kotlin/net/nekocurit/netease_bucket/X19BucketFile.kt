@@ -1,4 +1,4 @@
-package net.nekocurit.x19_bucket
+package net.nekocurit.netease_bucket
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
