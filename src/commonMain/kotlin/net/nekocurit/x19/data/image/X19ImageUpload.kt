@@ -8,6 +8,7 @@ import io.ktor.http.HttpHeaders
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import net.nekocurit.x19.data.X19AuthEntity
+import net.nekocurit.x19_bucket.X19BucketSession
 
 /**
  * @param token 上传凭据
@@ -32,11 +33,7 @@ data class X19ImageUpload(
     )
 
     /**
-     * 上传图片 理论同一凭证可重复使用
-     *
-     * 上传后会进入机器审核 (返回的url需要等待几秒才能使用)
-     *
-     * **使用时请遵循中国大陆相关法律法规, 不要上传违规图片**
+     * 上传图片
      *
      * @param image 图片数据
      */
@@ -45,4 +42,6 @@ data class X19ImageUpload(
         setBody(image)
     }
         .body<ImageMetadata>()
+
+    fun toBucketSession() = X19BucketSession.parse(token)
 }
