@@ -43,6 +43,11 @@ run/
 
 ### Kotlin ###
 .kotlin/
+kotlin-js-store/
+
+## Debug ##
+
+*.hprof
 
 ## Crash ###
 *.log
