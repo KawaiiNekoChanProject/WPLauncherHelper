@@ -2,6 +2,8 @@ package net.nekocurit.netease_bucket
 
 import io.ktor.client.*
 import io.ktor.client.call.*
+import io.ktor.client.content.ProgressListener
+import io.ktor.client.plugins.onUpload
 import io.ktor.client.request.*
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.*
@@ -80,11 +82,21 @@ data class NetEaseBucketSession(
         append(rawPolicy)
     }
 
-    suspend fun upload(channel: ByteReadChannel) = client.post(policy.url) {
+    /**
+     * 上传文件
+     *
+     * 除非你知道在做什么, 否则你应该使用其它函数完成上传
+     *
+     * @param onUpload 上传进度回调
+     * @param block 自己指定上传文件来源
+     */
+    suspend fun upload(
+        onUpload: ProgressListener? = null,
+        block: HttpRequestBuilder.() -> Unit
+    ) = client.post(policy.url) {
         header(HttpHeaders.Authorization, generateAuthorizationHeader())
-        setBody(object : OutgoingContent.ReadChannelContent() {
-            override fun readFrom() = channel
-        })
+        block()
+        onUpload(onUpload)
     }
         .apply {
             val body = bodyAsText()
@@ -92,5 +104,33 @@ data class NetEaseBucketSession(
         }
         .body<X19BucketFile>()
 
-    suspend fun upload(raw: ByteArray) = upload(ByteReadChannel(raw))
+    /**
+     * 上传文件
+     *
+     * @param onUpload 上传进度回调, 注意 `contentLength` 参数恒定返回 null
+     */
+    suspend fun upload(
+        channel: ByteReadChannel,
+        onUpload: ProgressListener? = null
+    ) = upload(onUpload) {
+        setBody(channel)
+    }
+
+    /**
+     * 上传文件
+     *
+     * 如果 IDE 函数签名识别错误, 请按照这个风格写
+     *
+     * ```kotlin
+     * upload(raw) { bytesSentTotal, contentLength ->  }
+     * ```
+     *
+     * @param onUpload 上传进度回调
+     */
+    suspend fun upload(
+        raw: ByteArray,
+        onUpload: ProgressListener? = null
+    ) = upload(onUpload) {
+        setBody(raw)
+    }
 }
